@@ -23,7 +23,7 @@ node {
                                     description: '是否跳过单元测试'),
 
                             extendedChoice(name: 'modules',
-                                    defaultValue: 'client',
+                                    defaultValue: 'registry@8761',
                                     description: '请选择需要构建部署的模块',
                                     descriptionPropertyValue: '注册中心,远程服务,客户端服务',
                                     multiSelectDelimiter: ',',
