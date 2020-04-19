@@ -51,11 +51,12 @@ node {
         echo "编译打包"
         try {
             "${modules}".split(',').eachWithIndex { m, index ->
-                echo "开始构建并推送模块${m}远程镜像"
+                def serviceName = m.split("@")[0]
+                echo "开始构建并推送模块${serviceName}远程镜像"
                 if ("${skipTest}".toBoolean()) {
-                    sh "mvn -Dmaven.skip.test=true -f ${m} clean install docker:push"
+                    sh "mvn -Dmaven.skip.test=true -f ${serviceName} clean install docker:push"
                 } else {
-                    sh "mvn -f ${m} clean install docker:push"
+                    sh "mvn -f ${serviceName} clean install docker:push"
                 }
             }
         }
@@ -67,8 +68,9 @@ node {
                 sh "mvn clean install"
             }
             "${modules}".split(',').eachWithIndex { m, index ->
-                echo "开始推送模块[${m}]的远程镜像"
-                sh "mvn -f ${m} docker:push"
+                def serviceName = m.split("@")[0]
+                echo "开始推送模块[${serviceName}]的远程镜像"
+                sh "mvn -f ${serviceName} docker:push"
             }
         }
         echo "编译打包结束"
