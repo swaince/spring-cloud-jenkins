@@ -30,7 +30,7 @@ node {
                                     quoteValue: false,
                                     saveJSONParameterToFile: false,
                                     type: 'PT_CHECKBOX',
-                                    value: 'registry,service,client',
+                                    value: 'registry@8761,service@8081,client@9090',
                                     visibleItemCount: 3)])])
     }
 
@@ -77,12 +77,14 @@ node {
     stage("服务部署") {
         echo '服务部署'
         "${modules}".split(',').eachWithIndex {m, index ->
+            def serviceName = m.split("@")[0]
+            def servicePort = m.split("@")[1]
             sshPublisher(publishers: [sshPublisherDesc(configName: "${registry}",
                     transfers: [sshTransfer(cleanRemote: false,
                             excludes: '',
                             execCommand: """
                             #!/bin/bash
-                            docker run -d --name ${m}${index} -u root docker.localregistry.com/library/${m}
+                            docker run -d --name ${serviceName}${index} -p ${servicePort}:${servicePort} -u root docker.localregistry.com/library/${serviceName}
                         """,
                             execTimeout: 120000,
                             flatten: false,
