@@ -87,11 +87,11 @@ node {
                             execCommand: """
                             #!/bin/bash
                             pid=`docker ps | grep ${serviceName} | grep -v grep`
-                            if [ "\$pid" != ""];theh
-                                docker stop `docker ps | grep ${serviceName} | awk '{ \$1 }'`
-                                docker rm `docker ps -a| grep ${serviceName} | awk '{ \$1 }'`
-                                docker rmi `docker images | grep ${serviceName} | awk '{ \$3 }'`
-                            fi   
+                            if [ "\$pid" != "" ]; theh
+                                docker stop `docker ps | grep ${serviceName} | awk '{ print \$1 }'`
+                                docker rm `docker ps -a| grep ${serviceName} | awk '{ print \$1 }'`
+                                docker rmi `docker images | grep ${serviceName} | awk '{ print \$3 }'`
+                            fi
                             docker run -d --rm --name ${serviceName}${index} -p ${servicePort}:${servicePort} -u root docker.localregistry.com/library/${serviceName}
                                 
                             """,
