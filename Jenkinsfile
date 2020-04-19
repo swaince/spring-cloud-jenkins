@@ -86,8 +86,15 @@ node {
                             excludes: '',
                             execCommand: """
                             #!/bin/bash
-                            docker run -d --name ${serviceName}${index} -p ${servicePort}:${servicePort} -u root docker.localregistry.com/library/${serviceName}
-                        """,
+                            pid=`docker ps | grep ${serviceName} | grep -v grep`
+                            if [ "\$pid" != ""];theh
+                                docker stop `docker ps | grep ${serviceName} | awk '{ \$1 }'`
+                                docker rm `docker ps -a| grep ${serviceName} | awk '{ \$1 }'`
+                                docker rmi `docker images | grep ${serviceName} | awk '{ \$3 }'`
+                            fi   
+                            docker run -d --rm --name ${serviceName}${index} -p ${servicePort}:${servicePort} -u root docker.localregistry.com/library/${serviceName}
+                                
+                            """,
                             execTimeout: 120000,
                             flatten: false,
                             makeEmptyDirs: false,
