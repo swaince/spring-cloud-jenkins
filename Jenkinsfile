@@ -1,7 +1,6 @@
 #! groovy
 def account_auth = '499a32cf-cc22-4c27-92b3-6f73d62d3fb4'
 def scm_url = 'https://github.com/swaince/spring-cloud-jenkins.git'
-def registry = 'registry'
 node {
     stage("初始化构建环境") {
         echo "正在初始化构建环境。。。"
@@ -31,7 +30,21 @@ node {
                                     saveJSONParameterToFile: false,
                                     type: 'PT_CHECKBOX',
                                     value: 'registry@8761,service@8081,client@9090',
-                                    visibleItemCount: 3)])])
+                                    visibleItemCount: 3),
+
+                            extendedChoice(name: 'deploy_hosts',
+                                    defaultValue: 'master',
+                                    description: '服务器',
+                                    descriptionPropertyValue: '服务器1,服务器2,服务器3',
+                                    multiSelectDelimiter: ',',
+                                    quoteValue: false,
+                                    saveJSONParameterToFile: false,
+                                    type: 'PT_CHECKBOX',
+                                    value: 'registry,master,slave',
+                                    visibleItemCount: 3)
+                    ]),
+
+        ])
     }
 
     stage("拉取代码") {
@@ -78,13 +91,14 @@ node {
 
     stage("服务部署") {
         echo '服务部署'
-        "${modules}".split(',').eachWithIndex {m, index ->
-            def serviceName = m.split("@")[0]
-            def servicePort = m.split("@")[1]
-            sshPublisher(publishers: [sshPublisherDesc(configName: "${registry}",
-                    transfers: [sshTransfer(cleanRemote: false,
-                            excludes: '',
-                            execCommand: """
+        "${deploy_hosts}".split(',').eachWithIndex { host, index ->
+            "${modules}".split(',').each { module->
+                def serviceName = module.split("@")[0]
+                def servicePort = module.split("@")[1]
+                sshPublisher(publishers: [sshPublisherDesc(configName: "${host}",
+                        transfers: [sshTransfer(cleanRemote: false,
+                                excludes: '',
+                                execCommand: """
 #!/bin/bash
 pid=`docker ps | grep ${serviceName} | grep -v grep`
 if [ "\$pid" != "" ]; then
@@ -92,20 +106,21 @@ if [ "\$pid" != "" ]; then
     docker rm `docker ps -a | grep ${serviceName} | awk '{ print \$1 }'`
     docker rmi `docker images | grep ${serviceName} } awk '{ print \$3 }'`
 fi
-docker run -d --rm --name ${serviceName}${index} -p ${servicePort}:${servicePort} -u root docker.localregistry.com/library/${serviceName}
+docker run -d --rm --name ${serviceName} -p ${servicePort}:${servicePort} -u root docker.localregistry.com/library/${serviceName}
                             """,
-                            execTimeout: 120000,
-                            flatten: false,
-                            makeEmptyDirs: false,
-                            noDefaultExcludes: false,
-                            patternSeparator: '[, ]+',
-                            remoteDirectory: '',
-                            remoteDirectorySDF: false,
-                            removePrefix: '',
-                            sourceFiles: '')],
-                    usePromotionTimestamp: false,
-                    useWorkspaceInPromotion: false,
-                    verbose: false)])
+                                execTimeout: 120000,
+                                flatten: false,
+                                makeEmptyDirs: false,
+                                noDefaultExcludes: false,
+                                patternSeparator: '[, ]+',
+                                remoteDirectory: '',
+                                remoteDirectorySDF: false,
+                                removePrefix: '',
+                                sourceFiles: '')],
+                        usePromotionTimestamp: false,
+                        useWorkspaceInPromotion: false,
+                        verbose: false)])
+            }
         }
     }
 }
